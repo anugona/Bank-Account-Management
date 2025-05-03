@@ -1,0 +1,170 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_CUSTOMERS 100
+
+// Structure for Transaction Node
+typedef struct Transaction {
+    char type[10]; // "Deposit" or "Withdraw"
+    float amount;
+    struct Transaction *next;
+} Transaction;
+
+// Structure for Customer Account
+typedef struct {
+    int accountNumber;
+    char name[50];
+    float balance;
+    Transaction *transactions;
+} Customer;
+
+// Array of customers
+Customer customers[MAX_CUSTOMERS];
+int customerCount = 0;
+
+// Function to create a new transaction node
+Transaction* createTransaction(const char *type, float amount) {
+    Transaction *newTransaction = (Transaction *)malloc(sizeof(Transaction));
+    strcpy(newTransaction->type, type);
+    newTransaction->amount = amount;
+    newTransaction->next = NULL;
+    return newTransaction;
+}
+
+// Function to add a transaction to customer's linked list
+void addTransaction(Customer *customer, const char *type, float amount) {
+    Transaction *newTransaction = createTransaction(type, amount);
+    newTransaction->next = customer->transactions;
+    customer->transactions = newTransaction;
+}
+
+// Function to add a new customer
+void addCustomer() {
+    if (customerCount >= MAX_CUSTOMERS) {
+        printf("Customer limit reached!\n");
+        return;
+    }
+    Customer newCustomer;
+    printf("Enter account number: ");
+    scanf("%d", &newCustomer.accountNumber);
+    printf("Enter name: ");
+    scanf(" %[^\n]", newCustomer.name);
+    newCustomer.balance = 0.0;
+    newCustomer.transactions = NULL;
+    
+    customers[customerCount++] = newCustomer;
+    
+    printf("Customer added successfully!\n");
+}
+
+// Function to find customer by account number
+Customer* findCustomer(int accountNumber) {
+    for (int i = 0; i < customerCount; i++) {
+        if (customers[i].accountNumber == accountNumber)
+            return &customers[i];
+    }
+    return NULL;
+}
+
+// Function to deposit money
+void deposit() {
+    int accNum;
+    float amount;
+    printf("Enter account number: ");
+    scanf("%d", &accNum);
+    Customer *cust = findCustomer(accNum);
+    if (cust == NULL) {
+        printf("Account not found!\n");
+        return;
+    }
+    printf("Enter amount to deposit: ");
+    scanf("%f", &amount);
+    
+    cust->balance += amount;
+    addTransaction(cust, "Deposit", amount);
+    
+    printf("Deposit successful. New balance: %.2f\n", cust->balance);
+}
+
+// Function to withdraw money
+void withdraw() {
+    int accNum;
+    float amount;
+    printf("Enter account number: ");
+    scanf("%d", &accNum);
+    Customer *cust = findCustomer(accNum);
+    if (cust == NULL) {
+        printf("Account not found!\n");
+        return;
+    }
+    printf("Enter amount to withdraw: ");
+    scanf("%f", &amount);
+    
+    if (cust->balance < amount) {
+        printf("Insufficient balance!\n");
+        return;
+    }
+    
+    cust->balance -= amount;
+    addTransaction(cust, "Withdraw", amount);
+    
+    printf("Withdrawal successful. New balance: %.2f\n", cust->balance);
+}
+
+// Function to display account and transaction history
+void viewAccount() {
+    int accNum;
+    printf("Enter account number: ");
+    scanf("%d", &accNum);
+    Customer *cust = findCustomer(accNum);
+    if (cust == NULL) {
+        printf("Account not found!\n");
+        return;
+    }
+    printf("\nAccount Number: %d\n", cust->accountNumber);
+    printf("Name: %s\n", cust->name);
+    printf("Balance: %.2f\n", cust->balance);
+    
+    printf("\nTransaction History:\n");
+    Transaction *temp = cust->transactions;
+    if (!temp) {
+        printf("No transactions yet.\n");
+    } else {
+        while (temp) {
+            printf("%s of %.2f\n", temp->type, temp->amount);
+            temp = temp->next;
+        }
+    }
+    printf("\n");
+}
+
+// Main Menu
+void menu() {
+    int choice;
+    do {
+        printf("\n--- Bank Account Management ---\n");
+        printf("1. Add Customer\n");
+        printf("2. Deposit Money\n");
+        printf("3. Withdraw Money\n");
+        printf("4. View Account Details\n");
+        printf("5. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+        
+        switch (choice) {
+            case 1: addCustomer(); break;
+            case 2: deposit(); break;
+            case 3: withdraw(); break;
+            case 4: viewAccount(); break;
+            case 5: printf("Exiting...\n"); break;
+            default: printf("Invalid choice! Try again.\n");
+        }
+    } while (choice != 5);
+}
+
+// Main function
+int main() {
+    menu();
+    return 0;
+}
